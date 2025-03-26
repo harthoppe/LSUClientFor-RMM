@@ -1,8 +1,8 @@
-# utilizes LSUCliuent with adjustments for NinjaOne RMM interactivity
+# utilizes LSUClient with adjustments for NinjaOne RMM interactivity
 
 Start-Transcript -Path $env:TEMP -Append
 
-Install-Module -Name 'LSUClient' # -Force
+Install-Module -Name 'LSUClient' -Force
 
 # Sets a time limit for how long package installers can run before they're forcefully stopped.
 # As a safety measure this limit is not applied for installers of firmware or BIOS/UEFI updates.
