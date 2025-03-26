@@ -1,6 +1,6 @@
 # utilizes LSUClient with adjustments for NinjaOne RMM interactivity
 
-Start-Transcript -Path $env:TEMP -Append
+Start-Transcript -Path "$($env:TEMP)\Update-Lenovo.txt" -Append
 
 Install-Module -Name 'LSUClient' -Force
 
