@@ -2,6 +2,17 @@
 
 Start-Transcript -Path "$($env:TEMP)\Update-Lenovo.txt" -Append
 
+try {
+    $batteryStatus = Get-WmiObject -Class BatteryStatus -Namespace root\wmi
+    if ($batteryStatus.PowerOnLine) {
+        Write-Host "Power is not connected. Exiting script."
+        exit 0
+    }
+} catch {
+    Write-Host "Error checking power status. Exiting script."
+    exit 0
+}
+
 Install-Module -Name 'LSUClient' -Force
 
 # Sets a time limit for how long package installers can run before they're forcefully stopped.
