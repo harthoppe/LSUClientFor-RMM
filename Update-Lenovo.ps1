@@ -15,6 +15,7 @@ if ($env:maxExtractRuntime) {
     Set-LSUClientConfiguration -MaxExtractRuntime (New-TimeSpan -Minutes 20) -Verbose
 }
 
+# Set a maximum allowed installer runtime of 20 minutes if set by NinjaOne
 $MaxRounds = $($env:maxRounds)
 
 for ($Round = 1; $Round -le $MaxRounds; $Round++) {
@@ -28,6 +29,7 @@ for ($Round = 1; $Round -le $MaxRounds; $Round++) {
     [array]$results = Install-LSUpdate -Path $env:TEMP -Package $updates -SaveBIOSUpdateInfoToRegistry -Verbose
 }
 
+# Check if a reboot is needed and reboot if set by NinjaOne
 if ($env:rebootIfNeeded -eq 'true') {
     # restart if requested
     try{
