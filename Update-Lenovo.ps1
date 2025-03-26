@@ -4,7 +4,7 @@ Start-Transcript -Path "$($env:TEMP)\Update-Lenovo.txt" -Append
 
 try {
     $batteryStatus = Get-WmiObject -Class BatteryStatus -Namespace root\wmi
-    if ($batteryStatus.PowerOnLine) {
+    if ($batteryStatus.PowerOnLine -eq $false) {
         Write-Host "Power is not connected. Exiting script."
         exit 0
     }
