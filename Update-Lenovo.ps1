@@ -1,3 +1,5 @@
+# utilizes LSUCliuent with adjustments for NinjaOne RMM interactivity
+
 Start-Transcript -Path $env:TEMP -Append
 
 Install-Module -Name 'LSUClient' # -Force
