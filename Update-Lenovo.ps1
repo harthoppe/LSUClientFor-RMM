@@ -42,6 +42,7 @@ for ($Round = 1; $Round -le $MaxRounds; $Round++) {
 
 # Either restart the computer or display a remediation message
 if ($env:forceRestartComputer -eq $true) {
+    Stop-Transcript
     Restart-Computer
 }  else {
     msg * "Critical updates have been installed. Please restart your computer immedietly to complete the installation."
