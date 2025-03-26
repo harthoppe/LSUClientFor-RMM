@@ -26,40 +26,14 @@ for ($Round = 1; $Round -le $MaxRounds; $Round++) {
         break;
     }
     $updates | Save-LSUpdate  -Path $env:TEMP -Verbose -ShowProgress
-    [array]$results = Install-LSUpdate -Path $env:TEMP -Package $updates -SaveBIOSUpdateInfoToRegistry -Verbose
+    [array]$results = Install-LSUpdate -Path $env:TEMP -Package $updates -Verbose
 }
 
-# Reboot if needed, by force if selected in NInjaOne
-if ($env:rebootIfNeeded -eq 'true') {
-    # force restart if requested
-    try{
-        $action = Get-ItemPropertyValue 'HKLM:\Software\LSUClient\BIOSUpdate' -Name 'ActionNeeded' -ErrorAction SilentlyContinue
-    }
-    catch{}
-    if($action -like 'reboot'){
-        Remove-ItemProperty -Path 'HKLM:\Software\LSUClient\BIOSUpdate' -Name 'ActionNeeded'
-        Write-Output "Reboot requested"
-        msg * "Lenovo updates have been installed. Your computer will nwo reboot."
-        Restart-Computer
-    }
-    else {
-        Write-Output "Reboot not required"
-        msg * "Lenovo updates have been installed. No reboot is required."
-    }
-} elseif ($env:rebootIfNeeded -eq 'false') {
-    # request restart if requested
-    try{
-        $action = Get-ItemPropertyValue 'HKLM:\Software\LSUClient\BIOSUpdate' -Name 'ActionNeeded' -ErrorAction SilentlyContinue
-    }
-    catch{}
-    if($action -like 'reboot'){
-        Remove-ItemProperty -Path 'HKLM:\Software\LSUClient\BIOSUpdate' -Name 'ActionNeeded'
-        msg * "Updates have been installed that require reboot. Please restart your computer immedietly to complete installation."
-    }
-    else {
-        Write-Output "Reboot not required"
-        msg * "Lenovo updates have been installed. No reboot is required."
-    }
+# Either restart the computer or display a remediation message
+if ($env:forceRestartComputer -eq $true) {
+    Restart-Computer
+}  else {
+    msg * "Critical updates have been installed. Please restart your computer immedietly to complete the installation."
 }
 
 Stop-Transcript
