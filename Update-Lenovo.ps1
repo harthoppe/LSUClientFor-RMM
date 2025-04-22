@@ -2,16 +2,17 @@
 
 # start logging
 Start-Transcript -Path $env:TEMP\Update-LenovoComputer_NinjaOne.log -Append
-Write-Host "Logging to $env:TEMP`\Update-LenovoComputer_NinjaOne.log"
 
 try {
-    $batteryStatus = Get-WmiObject -Class BatteryStatus -Namespace root\wmi
+    $batteryStatus = Get-CimInstance -ClassName BatteryStatus -Namespace root\wmi
     if ($batteryStatus.PowerOnLine -eq $false) {
-        Write-Host "Power is not connected. Exiting script."
+        Write-Host "Power is not connected. Exiting script." -BackgroundColor Red -ForegroundColor White
+        Stop-Transcript
         exit 0
     }
 } catch {
-    Write-Host "Error checking power status. Exiting script."
+    Write-Host "Error checking power status. Exiting script." -BackgroundColor Red -ForegroundColor White
+    Stop-Transcript
     exit 0
 }
 
@@ -29,29 +30,41 @@ if ($env:maxExtractRuntime) {
 }
 
 # Install updates that are not firmware or BIOS/UEFI updates
-Write-Host "Installing updates that are not firmware or BIOS/UEFI updates..."
-Get-LSUpdate | Where-Object { $_.Installer.Unattended } | Tee-Object -Variable updates
+Write-Host "Finding updates that are not firmware or BIOS/UEFI updates..."
+Get-LSUpdate | Where-Object { $_.Installer.Unattended } | Tee-Object -Variable unattendedUpdates
 Write-Host "$($unattendedUpdates.Count) updates found"
-$unattendedUpdates | fl *
-$unattendedUpdates | Save-LSUpdate -Verbose
-$i = 1
-foreach ($update in $unattendedUpdates) {
-    Write-Host "Installing update $i of $($unattendedUpdates.Count): $($unattendedUpdates.Title)"
-    Install-LSUpdate -Package $update -Verbose
-    $i++
+if ($unattendedUpdates.Count -gt 0) {
+    $unattendedUpdates | Save-LSUpdate -Verbose
+    $i = 1
+    foreach ($update in $unattendedUpdates) {
+        Write-Host "Installing update $i of $($unattendedUpdates.Count): $($update.Title)"
+        Install-LSUpdate -Package $update -Verbose
+        $i++
+    }
+} else {
+    Write-Host "No unattended updates found."
 }
 
 # Install firmware or BIOS/UEFI updates
 # Note: The installer for firmware or BIOS/UEFI updates is not unattended, so it will prompt the user for input.
-Write-Host "Installing firmware or BIOS/UEFI updates..."
-Get-LSUpdate | Tee-Object -Variable updates
+Write-Host "Finding firmware or BIOS/UEFI updates..."
+Get-LSUpdate | Tee-Object -Variable biosUpdates
 Write-Host "$($biosUpdates.Count) updates found"
-$biosUpdates | fl *
-$biosUpdates | Save-LSUpdate -Verbose
-foreach ($update in $biosUpdates) {
-    Write-Host "Installing update $i of $($biosUpdates.Count): $($biosUpdates.Title)"
-    Install-LSUpdate -Package $update -Verbose
-    $i++
+if ($biosUpdates.Count -gt 0) {
+    $biosUpdates | Save-LSUpdate -Verbose
+    foreach ($update in $biosUpdates) {
+        Write-Host "Installing update $i of $($biosUpdates.Count): $($update.Title)"
+        Install-LSUpdate -Package $update -Verbose
+        $i++
+    }
+} else {
+    Write-Host "No firmware or BIOS/UEFI updates found."
+}
+
+# no updates found, exit script
+if ($unattendedUpdates.Count -eq 0 -and $biosUpdates.Count -eq 0) {
+    Write-Host "No updates found. Exiting script."
+    exit 0
 }
 
 # Either restart the computer or display a remediation message
@@ -60,6 +73,6 @@ if ($env:forceRestartComputer -eq $true) {
     Stop-Transcript
     Restart-Computer
 }  else {
-    msg * "Critical updates have been installed. Please restart your computer immedietly to complete the installation."
+    msg * "Critical updates have been installed. Please restart your computer immediately to complete the installation."
     Stop-Transcript
 }
