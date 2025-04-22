@@ -21,12 +21,12 @@ Install-Module -Name 'LSUClient' -Force
 # Sets a time limit for how long package installers can run before they're forcefully stopped.
 # As a safety measure this limit is not applied for installers of firmware or BIOS/UEFI updates.
 if ($env:maxInstallerRuntime) {
-    Set-LSUClientConfiguration -MaxInstallerRuntime (New-TimeSpan -Minutes 6) -Verbose
+    Set-LSUClientConfiguration -MaxInstallerRuntime (New-TimeSpan -Minutes 6)
 }
 
 # Set a maximum allowed installer runtime of 20 minutes
 if ($env:maxExtractRuntime) {
-    Set-LSUClientConfiguration -MaxExtractRuntime (New-TimeSpan -Minutes 20) -Verbose
+    Set-LSUClientConfiguration -MaxExtractRuntime (New-TimeSpan -Minutes 20)
 }
 
 # Install updates that are not firmware or BIOS/UEFI updates
@@ -34,11 +34,11 @@ Write-Host "Finding updates that are not firmware or BIOS/UEFI updates..."
 Get-LSUpdate | Where-Object { $_.Installer.Unattended } | Tee-Object -Variable unattendedUpdates
 Write-Host "$($unattendedUpdates.Count) updates found"
 if ($unattendedUpdates.Count -gt 0) {
-    $unattendedUpdates | Save-LSUpdate -Verbose
+    $unattendedUpdates | Save-LSUpdate
     $i = 1
     foreach ($update in $unattendedUpdates) {
         Write-Host "Installing update $i of $($unattendedUpdates.Count): $($update.Title)"
-        Install-LSUpdate -Package $update -Verbose
+        Install-LSUpdate -Package $update
         $i++
     }
 } else {
@@ -51,10 +51,10 @@ Write-Host "Finding firmware or BIOS/UEFI updates..."
 Get-LSUpdate | Tee-Object -Variable biosUpdates
 Write-Host "$($biosUpdates.Count) updates found"
 if ($biosUpdates.Count -gt 0) {
-    $biosUpdates | Save-LSUpdate -Verbose
+    $biosUpdates | Save-LSUpdate
     foreach ($update in $biosUpdates) {
         Write-Host "Installing update $i of $($biosUpdates.Count): $($update.Title)"
-        Install-LSUpdate -Package $update -Verbose
+        Install-LSUpdate -Package $update
         $i++
     }
 } else {
