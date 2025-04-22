@@ -1,5 +1,9 @@
 # utilizes LSUClient with adjustments for NinjaOne RMM interactivity
 
+# start logging
+Start-Transcript -Path $env:TEMP\Update-LenovoComputer_NinjaOne.log -Append
+Write-Host "Logging to $env:TEMP`\Update-LenovoComputer_NinjaOne.log"
+
 try {
     $batteryStatus = Get-WmiObject -Class BatteryStatus -Namespace root\wmi
     if ($batteryStatus.PowerOnLine -eq $false) {
@@ -24,20 +28,38 @@ if ($env:maxExtractRuntime) {
     Set-LSUClientConfiguration -MaxExtractRuntime (New-TimeSpan -Minutes 20) -Verbose
 }
 
-for ($Round = 1; $Round -le $($env:maxRounds); $Round++) {
-    Write-Host "Starting round $Round"
-    $updates = Get-LSUpdate -FailUnsupportedDependencies -Verbose
-    Write-Host "$($updates.Count) updates found"
-    if ($updates.Count -eq 0) {
-        break;
-    }
-    $updates | Save-LSUpdate  -Path $env:TEMP -Verbose
-    [array]$results = Install-LSUpdate -Path $env:TEMP -Package $updates -Verbose
+# Install updates that are not firmware or BIOS/UEFI updates
+Write-Host "Installing updates that are not firmware or BIOS/UEFI updates..."
+Get-LSUpdate | Where-Object { $_.Installer.Unattended } | Tee-Object -Variable updates
+Write-Host "$($unattendedUpdates.Count) updates found"
+$unattendedUpdates | fl *
+$unattendedUpdates | Save-LSUpdate -Verbose
+$i = 1
+foreach ($update in $unattendedUpdates) {
+    Write-Host "Installing update $i of $($unattendedUpdates.Count): $($unattendedUpdates.Title)"
+    Install-LSUpdate -Package $update -Verbose
+    $i++
+}
+
+# Install firmware or BIOS/UEFI updates
+# Note: The installer for firmware or BIOS/UEFI updates is not unattended, so it will prompt the user for input.
+Write-Host "Installing firmware or BIOS/UEFI updates..."
+Get-LSUpdate | Tee-Object -Variable updates
+Write-Host "$($biosUpdates.Count) updates found"
+$biosUpdates | fl *
+$biosUpdates | Save-LSUpdate -Verbose
+foreach ($update in $biosUpdates) {
+    Write-Host "Installing update $i of $($biosUpdates.Count): $($biosUpdates.Title)"
+    Install-LSUpdate -Package $update -Verbose
+    $i++
 }
 
 # Either restart the computer or display a remediation message
 if ($env:forceRestartComputer -eq $true) {
+    Write-Host "Force restarting computer..."
+    Stop-Transcript
     Restart-Computer
 }  else {
     msg * "Critical updates have been installed. Please restart your computer immedietly to complete the installation."
+    Stop-Transcript
 }
