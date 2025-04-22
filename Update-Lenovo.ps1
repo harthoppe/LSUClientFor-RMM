@@ -71,7 +71,7 @@ if ($unattendedUpdates.Count -eq 0 -and $biosUpdates.Count -eq 0) {
 if ($env:forceRestartComputer -eq $true) {
     Write-Host "Force restarting computer..."
     Stop-Transcript
-    Restart-Computer
+    Restart-Computer -Force
 }  else {
     msg * "Critical updates have been installed. Restart your computer to complete the installation."
     Stop-Transcript
