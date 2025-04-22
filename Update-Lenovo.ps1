@@ -73,6 +73,6 @@ if ($env:forceRestartComputer -eq $true) {
     Stop-Transcript
     Restart-Computer
 }  else {
-    msg * "Critical updates have been installed. Please restart your computer immediately to complete the installation."
+    msg * "Critical updates have been installed. Restart your computer to complete the installation."
     Stop-Transcript
 }
