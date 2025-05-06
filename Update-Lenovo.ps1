@@ -30,23 +30,25 @@ if ($env:maxExtractRuntime) {
 }
 
 # Install updates that are not firmware or BIOS/UEFI updates
-Write-Host "Finding updates that are not firmware or BIOS/UEFI updates..."
-Get-LSUpdate | Where-Object { $_.Installer.Unattended } | Tee-Object -Variable unattendedUpdates
-Write-Host "$($unattendedUpdates.Count) updates found"
-if ($unattendedUpdates.Count -gt 0) {
-    $unattendedUpdates | Save-LSUpdate
-    $i = 1
-    foreach ($update in $unattendedUpdates) {
-        Write-Host "Installing update $i of $($unattendedUpdates.Count): $($update.Title)"
-        Install-LSUpdate -Package $update
-        $i++
+for ($i = 0; $i -lt $($env:iterations); $i++) {
+    Write-Host "Finding updates that are not firmware or BIOS/UEFI updates..."
+    Get-LSUpdate | Where-Object { $_.Installer.Unattended } | Tee-Object -Variable unattendedUpdates
+    Write-Host "$($unattendedUpdates.Count) updates found"
+    if ($unattendedUpdates.Count -gt 0) {
+        $unattendedUpdates | Save-LSUpdate
+        $i = 1
+        foreach ($update in $unattendedUpdates) {
+            Write-Host "Installing update $i of $($unattendedUpdates.Count): $($update.Title)"
+            Install-LSUpdate -Package $update
+            $i++
+        }
+    } else {
+        Write-Host "No unattended updates found."
     }
-} else {
-    Write-Host "No unattended updates found."
 }
 
 # Install firmware or BIOS/UEFI updates
-# Note: The installer for firmware or BIOS/UEFI updates is not unattended, so it will prompt the user for input.
+# Note: The installer for firmware or BIOS/UEFI updates are not intended to be unattended, so it may prompt the user for input.
 Write-Host "Finding firmware or BIOS/UEFI updates..."
 Get-LSUpdate | Tee-Object -Variable biosUpdates
 Write-Host "$($biosUpdates.Count) updates found"
